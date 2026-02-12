@@ -11,6 +11,26 @@ It provides a predictable way to manage application state using:
 
 NAIStore is intentionally minimal, dependency-free, and safe to embed directly into a script without build tooling.
 
+## Installation
+
+### Method A: Copy-paste (simplest)
+
+Copy `src/nai-store.ts` directly into your NovelAI Script project.
+
+### Method B: npm + nibs
+
+If your project uses [nibs](https://github.com/LaneRendell/NovelAI_Script_BuildSystem) or another bundler that resolves `node_modules`:
+
+```bash
+npm install nai-store
+```
+
+```ts
+import { createStore, createSlice, combineReducers, matchesAction } from "nai-store";
+```
+
+> **Note:** This package distributes raw TypeScript source — no compilation step is needed. Your bundler must support `.ts` imports.
+
 ---
 
 ## Why NAIStore?
