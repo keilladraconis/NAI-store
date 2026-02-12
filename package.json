@@ -1,0 +1,37 @@
+{
+  "name": "nai-store",
+  "version": "0.1.0",
+  "description": "A minimal synchronous state management library for NovelAI Scripting",
+  "type": "module",
+  "main": "./src/nai-store.ts",
+  "types": "./src/nai-store.ts",
+  "exports": {
+    ".": {
+      "types": "./src/nai-store.ts",
+      "default": "./src/nai-store.ts"
+    }
+  },
+  "files": [
+    "src/nai-store.ts",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "novelai",
+    "state",
+    "redux",
+    "scripting"
+  ],
+  "author": "keilladraconis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keilladraconis/NAI-store.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
