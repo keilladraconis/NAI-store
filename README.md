@@ -106,8 +106,7 @@ Actions are plain objects that describe _what happened_. They typically have a `
 ```ts
 type Action<T = string> = {
   type: T;
-  payload?: any;
-  [key: string]: any;
+  payload?: unknown;
 };
 ```
 
@@ -258,6 +257,8 @@ Effects:
 - Run synchronously
 - Run for every dispatched action that matches the predicate
 - Can dispatch new actions
+
+> **Note:** NAIStore includes a dispatch cascade guard. If effects dispatch further actions that themselves dispatch further actions, the depth is tracked. If depth exceeds 10, the action is dropped and a warning is logged. This prevents runaway infinite dispatch loops.
 
 ---
 

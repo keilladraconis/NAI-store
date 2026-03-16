@@ -1,5 +1,5 @@
 /*
- NAIStore - [0.1.0]
+ NAIStore - [0.2.0]
 */
 
 // ==================================================
@@ -8,7 +8,7 @@
 
 export type Action<T = string> = {
   type: T;
-  [key: string]: any;
+  payload?: unknown;
 };
 
 type Reducer<S> = (state: S | undefined, action: Action) => S;
@@ -54,21 +54,32 @@ export function createStore<S>(
   const listeners = new Set<(state: S) => void>();
   const effects = new Set<{ when: EffectPredicate; run: Effect<S> }>();
 
+  let dispatchDepth = 0;
+
   function getState() {
     return currentState;
   }
 
   function dispatch(action: Action) {
-    if (debug) api.v1.log("NAIACT", action);
-    currentState = reducer(currentState, action);
-
-    for (const l of listeners) {
-      l(currentState);
+    if (dispatchDepth > 10) {
+      api.v1.log("[NAISTORE] Dispatch cascade depth > 10, dropping action:", action.type);
+      return;
     }
+    dispatchDepth++;
+    try {
+      if (debug) api.v1.log("NAISTORE", action);
+      currentState = reducer(currentState, action);
 
-    const ctx: EffectContext<S> = { dispatch, getState };
-    for (const e of effects) {
-      if (e.when(action)) e.run(action, ctx);
+      for (const l of listeners) {
+        l(currentState);
+      }
+
+      const ctx: EffectContext<S> = { dispatch, getState };
+      for (const e of effects) {
+        if (e.when(action)) e.run(action, ctx);
+      }
+    } finally {
+      dispatchDepth--;
     }
   }
 
