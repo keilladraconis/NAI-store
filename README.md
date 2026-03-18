@@ -227,9 +227,23 @@ store.subscribeSelector(
 
 ### Change Detection
 
-When you subscribe, the selector is evaluated immediately to capture the **initial value**. On subsequent dispatches, the selector is re-evaluated and the listener is called only if the new value differs from the previous one (compared using `Object.is`).
+When you subscribe, the selector is evaluated immediately to capture the **initial value**. On subsequent dispatches, the selector is re-evaluated and the listener is called only if the new value differs from the previous one (compared using `Object.is` by default).
 
 This means the listener is **not** called at subscription time — only on future state changes that produce a new selected value.
+
+### Custom Equality
+
+For selectors that return derived values (arrays, objects) where reference equality would fire on every dispatch, supply a custom `equals` function as the third argument:
+
+```ts
+store.subscribeSelector(
+  (state) => state.items.map((item) => item.id),
+  (ids) => { /* rebuild UI */ },
+  (a, b) => a.length === b.length && a.every((k, i) => k === b[i]),
+);
+```
+
+The listener will only fire when the key sequence actually changes.
 
 ---
 

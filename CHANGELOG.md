@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0] - 2026-03-18
+
+### Added
+
+- **Optional `equals` parameter on `subscribeSelector`** — callers can now supply a custom equality function `(a: T, b: T) => boolean` to control when the listener fires. Defaults to `Object.is` (no behavior change). This is essential for derived values (arrays, objects) where reference equality would cause the listener to fire on every dispatch even when the logical value hasn't changed.
+
+  ```ts
+  store.subscribeSelector(
+    (state) => state.items.map((item) => item.id),
+    (ids) => { /* only fires when the id list actually changes */ },
+    (a, b) => a.length === b.length && a.every((k, i) => k === b[i]),
+  );
+  ```
+
+---
+
 ## [0.2.0] - 2026-03-16
 
 ### Changed

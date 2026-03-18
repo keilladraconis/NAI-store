@@ -19,12 +19,14 @@ type SelectorListener<T> = (value: T) => void;
 
 type EffectPredicate = (action: Action) => boolean;
 
+type TypedEffectPredicate<A extends Action> = (action: Action) => action is A;
+
 type EffectContext<S> = {
   dispatch(action: Action): void;
   getState(): S;
 };
 
-type Effect<S> = (action: Action, ctx: EffectContext<S>) => void;
+type Effect<S, A extends Action = Action> = (action: A, ctx: EffectContext<S>) => void;
 
 // ==================================================
 // Store Interface
@@ -36,7 +38,9 @@ export interface Store<S> {
   subscribeSelector<T>(
     selector: Selector<S, T>,
     listener: SelectorListener<T>,
+    equals?: (a: T, b: T) => boolean,
   ): () => void;
+  subscribeEffect<A extends Action>(when: TypedEffectPredicate<A>, run: Effect<S, A>): () => void;
   subscribeEffect(when: EffectPredicate, run: Effect<S>): () => void;
 }
 
@@ -93,18 +97,19 @@ export function createStore<S>(
   function subscribeSelector<T>(
     selector: Selector<S, T>,
     listener: SelectorListener<T>,
+    equals: (a: T, b: T) => boolean = Object.is,
   ) {
     let current = selector(currentState);
 
     return subscribe((state) => {
       const next = selector(state);
-      if (Object.is(next, current)) return;
+      if (equals(next, current)) return;
       current = next;
       listener(next);
     });
   }
 
-  function subscribeEffect(when: EffectPredicate, run: Effect<S>) {
+  function subscribeEffect(when: EffectPredicate, run: Effect<S, any>) {
     const effect = { when, run };
     effects.add(effect);
     return () => {
