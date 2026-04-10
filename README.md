@@ -26,7 +26,7 @@ npm install nai-store
 ```
 
 ```ts
-import { createStore, createSlice, combineReducers, matchesAction } from "nai-store";
+import { createStore, createSlice, combineReducers, matchesAction, shallowEqual, createSelector } from "nai-store";
 ```
 
 > **Note:** This package distributes raw TypeScript source — no compilation step is needed. Your bundler must support `.ts` imports.
@@ -211,6 +211,24 @@ Reducer execution, subscriptions, and effect invocation all happen synchronously
 
 ---
 
+## Batching Dispatches
+
+When you need to dispatch several actions and only want subscribers to be notified once — with the final state — wrap them in `store.batch`:
+
+```ts
+store.batch(() => {
+  store.dispatch(actions.setName("Alice"));
+  store.dispatch(actions.setAge(30));
+  store.dispatch(actions.setRole("admin"));
+});
+// All subscribers notified once after the batch completes
+// Effects still run once per action, in order, after subscribers are notified
+```
+
+Nested `batch` calls collapse into the outermost batch — inner batches are transparent.
+
+---
+
 ## Selector Subscriptions (Reactive Logic)
 
 NAIStore supports **selector-based subscriptions**. They take a pair of functions as arguments.
@@ -244,6 +262,40 @@ store.subscribeSelector(
 ```
 
 The listener will only fire when the key sequence actually changes.
+
+### `shallowEqual`
+
+For selectors returning plain objects, NAIStore exports `shallowEqual` as a ready-made `equals` function. It compares own keys using `Object.is` on their values:
+
+```ts
+store.subscribeSelector(
+  (state) => ({ x: state.cursor.x, y: state.cursor.y }),
+  (pos) => renderCursor(pos),
+  shallowEqual,
+);
+```
+
+---
+
+## Memoized Selectors with `createSelector`
+
+`createSelector` builds a memoized selector from input selectors and a combiner. The combiner only re-runs when one of the input values changes (by `Object.is`), and the same result reference is returned otherwise. This prevents downstream listeners from firing when derived values haven't logically changed.
+
+```ts
+const selectVisibleTodos = createSelector(
+  [(s: RootState) => s.todos.items, (s: RootState) => s.todos.filter],
+  (items, filter) => {
+    if (filter === "all") return items;
+    return items.filter((t) => t.done === (filter === "completed"));
+  },
+);
+
+store.subscribeSelector(selectVisibleTodos, (visible) => {
+  api.v1.log("Visible:", visible.length);
+});
+```
+
+Because the combiner returns a new array only when inputs actually change, you do not need a custom `equals` function when using `createSelector`.
 
 ---
 
